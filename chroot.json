@@ -10,6 +10,7 @@
                 "mkfs.ext4 {{.Device}}1"
             ],
             "post_mount_commands": [
+                "echo 'DEVICE={{.Device}}' > provisioning/config",
                 "pacstrap {{.MountPath}} base openssh grub cloud-init python2-requests sudo"
             ],
             "mount_path": "/mnt/chroot",
