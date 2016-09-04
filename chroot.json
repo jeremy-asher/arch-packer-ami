@@ -1,0 +1,44 @@
+{
+    "builders": [
+        {
+            "type": "amazon-chroot",
+            "ami_name": "arch-packer-from-scratch {{timestamp}}",
+            "from_scratch": true,
+            "ami_virtualization_type": "hvm",
+            "pre_mount_commands": [
+                "parted {{.Device}} mklabel msdos mkpart primary 1M 100% set 1 boot on print",
+                "mkfs.ext4 {{.Device}}1"
+            ],
+            "post_mount_commands": [
+                "pacstrap {{.MountPath}} base openssh grub cloud-init python2-requests sudo"
+            ],
+            "mount_path": "/mnt/chroot",
+            "root_volume_size": 5,
+            "root_device_name": "xvda",
+            "ami_block_device_mappings": [
+                {
+                    "device_name": "xvda",
+                    "delete_on_termination": true,
+                    "volume_type": "gp2"
+                }
+            ],
+            "chroot_mounts": [
+                ["proc", "proc", "/proc"],
+		["sysfs", "sysfs", "/sys"],
+		["bind", "/dev", "/dev"],
+		["devpts", "devpts", "/dev/pts"],
+                ["bind", "provisioning", "/provisioning"]
+            ]
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "shell-local",
+            "command": "genfstab -U /mnt/chroot >> /mnt/chroot/etc/fstab"
+        },
+        {
+            "type": "shell",
+            "script": "provisioning/chroot-setup.sh"
+        }
+    ]
+}
